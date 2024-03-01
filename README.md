@@ -118,135 +118,101 @@ Display the obtained cipher text
 PROGRAM : 
 
 ```
-#include<stdio.h>
-#include<conio.h>
-#include<string.h>
-#include<ctype.h>
-#define MX 5
-void playfair(char ch1,char ch2, char key[MX][MX])
-{
-int i,j,w,x,y,z;
-FILE *out;
-if((out=fopen("cipher.txt","a+"))==NULL)
-{
-printf("File Corrupted.");
-}
-for(i=0;i<MX;i++)
-{
-for(j=0;j<MX;j++)
-{
-if(ch1==key[i][j])
-{
-w=i;
-x=j;
-}
-else if(ch2==key[i][j])
-{
-y=i;
-z=j;
-}}}
-//printf("%d%d %d%d",w,x,y,z);
-if(w==y)
-{
-x=(x+1)%5;z=(z+1)%5;
-printf("%c%c",key[w][x],key[y][z]);
-fprintf(out, "%c%c",key[w][x],key[y][z]);
-}
-else if(x==z)
-{
-w=(w+1)%5;y=(y+1)%5;
-printf("%c%c",key[w][x],key[y][z]);
-fprintf(out, "%c%c",key[w][x],key[y][z]);
-}
-else
-{
-printf("%c%c",key[w][z],key[y][x]);
-fprintf(out, "%c%c",key[w][z],key[y][x]);
-}
-fclose(out);
-}
-int main()
-{
-int i,j,k=0,l,m=0,n;
-char key[MX][MX],keyminus[25],keystr[10],str[25]={0};
-char
-alpa[26]={'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
-printf("\nEnter key:");
-gets(keystr);
-printf("\nEnter the plain text:");
-gets(str);
-n=strlen(keystr);
-//convert the characters to uppertext
-for (i=0; i<n; i++)
-{
-if(keystr[i]=='j')keystr[i]='i';
-else if(keystr[i]=='J')keystr[i]='I';
-keystr[i] = toupper(keystr[i]);
-}
-//convert all the characters of plaintext to uppertext
-for (i=0; i<strlen(str); i++)
-{
-if(str[i]=='j')str[i]='i';
-else if(str[i]=='J')str[i]='I';
-str[i] = toupper(str[i]);
-}
-j=0;
-for(i=0;i<26;i++)
-{
-for(k=0;k<n;k++)
-{
-if(keystr[k]==alpa[i])
-break;
-else if(alpa[i]=='J')
-break;
-}
-if(k==n)
-{
-keyminus[j]=alpa[i];j++;
-}
-}
-//construct key keymatrix
-k=0;
-for(i=0;i<MX;i++)
-{
-for(j=0;j<MX;j++)
-{
-if(k<n)
-{
-key[i][j]=keystr[k];
-k++;}
-else
-{
-key[i][j]=keyminus[m];m++;
-}
-printf("%c ",key[i][j]);
-}
-printf("\n");
-}
-printf("\n\nEntered text :%s\nCipher Text :",str);
-for(i=0;i<strlen(str);i++)
-{
-if(str[i]=='J')str[i]='I';
-if(str[i+1]=='\0')
-playfair(str[i],'X',key);
-else
-{
-if(str[i+1]=='J')str[i+1]='I';
-if(str[i]==str[i+1])
-playfair(str[i],'X',key);
-else
-{
-playfair(str[i],str[i+1],key);
-i++;
-}}
-}
-return 0;
-}
+import re
+
+def prepare_text(text):
+    # Remove non-alphabetic characters and convert to uppercase
+    text = re.sub(r'[^A-Za-z]', '', text.upper())
+    # Replace 'J' with 'I'
+    text = text.replace('J', 'I')
+    # Break text into pairs of characters
+    pairs = [text[i:i+2] for i in range(0, len(text), 2)]
+    # If the last pair contains only one character, append 'X'
+    if len(pairs[-1]) == 1:
+        pairs[-1] += 'X'
+    return pairs
+
+def generate_key(key):
+    key = re.sub(r'[^A-Za-z]', '', key.upper())
+    key = key.replace('J', 'I')
+    key = ''.join(dict.fromkeys(key))  # Remove duplicates
+    alphabet = 'ABCDEFGHIKLMNOPQRSTUVWXYZ'
+    key += ''.join(filter(lambda x: x not in key, alphabet))
+    return key
+
+def construct_matrix(key):
+    matrix = [list(key[i:i+5]) for i in range(0, 25, 5)]
+    return matrix
+
+def find_position(char, matrix):
+    for i in range(5):
+        for j in range(5):
+            if matrix[i][j] == char:
+                return i, j
+
+def encrypt_pair(pair, matrix):
+    char1, char2 = pair
+    row1, col1 = find_position(char1, matrix)
+    row2, col2 = find_position(char2, matrix)
+
+    if row1 == row2:
+        return matrix[row1][(col1 + 1) % 5] + matrix[row2][(col2 + 1) % 5]
+    elif col1 == col2:
+        return matrix[(row1 + 1) % 5][col1] + matrix[(row2 + 1) % 5][col2]
+    else:
+        return matrix[row1][col2] + matrix[row2][col1]
+
+def decrypt_pair(pair, matrix):
+    char1, char2 = pair
+    row1, col1 = find_position(char1, matrix)
+    row2, col2 = find_position(char2, matrix)
+
+    if row1 == row2:
+        return matrix[row1][(col1 - 1) % 5] + matrix[row2][(col2 - 1) % 5]
+    elif col1 == col2:
+        return matrix[(row1 - 1) % 5][col1] + matrix[(row2 - 1) % 5][col2]
+    else:
+        return matrix[row1][col2] + matrix[row2][col1]
+
+def playfair_encrypt(text, key):
+    pairs = prepare_text(text)
+    key = generate_key(key)
+    matrix = construct_matrix(key)
+
+    cipher_text = ''
+    for pair in pairs:
+        cipher_text += encrypt_pair(pair, matrix)
+
+    return cipher_text
+
+def playfair_decrypt(text, key):
+    pairs = [text[i:i+2] for i in range(0, len(text), 2)]
+    key = generate_key(key)
+    matrix = construct_matrix(key)
+
+    plain_text = ''
+    for pair in pairs:
+        plain_text += decrypt_pair(pair, matrix)
+
+    return plain_text
+
+# Example usage
+plaintext = "hemanthB"
+key = "examplekey"
+
+# Encryption
+encrypted_text = playfair_encrypt(plaintext, key)
+print("Encrypted:", encrypted_text)
+
+# Decryption
+decrypted_text = playfair_decrypt(encrypted_text, key)
+print("Decrypted:", decrypted_text)
+
 ```
 OUTPUT :
 
-![image](https://github.com/hemanth2110/cryptography_19CS412_classical_techni/assets/121078629/5bde229b-d5ea-4c8d-a1be-f44dd2b30c72)
 
+![Screenshot 2024-03-01 135205](https://github.com/hemanth2110/Cryptography---19CS412-classical-techqniques/assets/121078629/46527b58-b6c9-49b1-8bc8-75cac6f08d7d)
 
 
 RESULT :
