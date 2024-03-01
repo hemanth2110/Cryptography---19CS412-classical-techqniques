@@ -253,55 +253,87 @@ Combine all these groups to get the complete cipher text.
 PROGRAM :
 
 ```
-#include<stdio.h>
-#include<conio.h>
-#include<string.h>
-int main(){
-unsigned int a[3][3]={{6,24,1},{13,16,10},{20,17,15}};
-unsigned int b[3][3]={{8,5,10},{21,8,21},{21,12,8}};
-int i,j, t=0;
-unsigned int c[20],d[20];
-char msg[20];
-printf("Enter plain text: ");
-scanf("%s",msg);
-for(i=0;i<strlen(msg);i++)
-{
-c[i]=msg[i]-65;
-unsigned int a[3][3]={{6,24,1},{13,16,10},{20,17,15}};
-unsigned int b[3][3]={{8,5,10},{21,8,21},{21,12,8}};
-printf("%d ",c[i]);
-}
-for(i=0;i<3;i++)
-{ t=0;
-for(j=0;j<3;j++)
-{
-t=t+(a[i][j]*c[j]);
-}
-d[i]=t%26;
-}
-printf("\nEncrypted Cipher Text :");
-for(i=0;i<3;i++)
-printf(" %c",d[i]+65);
-for(i=0;i<3;i++)
-{
-t=0;
-for(j=0;j<3;j++)
-{
-t=t+(b[i][j]*d[j]);
-}
-c[i]=t%26;
-}
-printf("\nDecrypted Cipher Text :");
-for(i=0;i<3;i++)
-printf(" %c",c[i]+65);
-getch();
-return 0;
-}
+import numpy as np
+
+# Function to convert a string to a matrix of numbers (A=0, B=1, ..., Z=25)
+def text_to_matrix(text):
+    matrix = []
+    for char in text:
+        if char.isalpha():
+            matrix.append(ord(char.upper()) - ord('A'))
+    return np.array(matrix)
+
+# Function to convert a matrix of numbers to a string
+def matrix_to_text(matrix):
+    text = ''
+    for num in matrix:
+        text += chr(num + ord('A'))
+    return text
+
+# Function to encrypt a plaintext using the Hill cipher
+def hill_encrypt(plaintext, key):
+    n = len(key)
+    # Convert plaintext and key to matrices
+    plaintext_matrix = text_to_matrix(plaintext)
+    key_matrix = np.array(key)
+    # Reshape key matrix to an n x n matrix
+    key_matrix = key_matrix.reshape(n, n)
+    # Pad the plaintext matrix if necessary
+    if len(plaintext_matrix) % n != 0:
+        padding = n - len(plaintext_matrix) % n
+        plaintext_matrix = np.append(plaintext_matrix, np.zeros(padding, dtype=int))
+    # Reshape the plaintext matrix to an m x n matrix
+    plaintext_matrix = plaintext_matrix.reshape(-1, n)
+    # Perform the encryption
+    encrypted_matrix = np.dot(plaintext_matrix, key_matrix) % 26
+    # Convert the encrypted matrix back to a string
+    encrypted_text = matrix_to_text(encrypted_matrix.flatten())
+    return encrypted_text
+
+# Function to calculate the modular inverse of a matrix
+def mod_inv(matrix, modulus):
+    det = int(round(np.linalg.det(matrix)))
+    det_inv = pow(det, -1, modulus)
+    adjoint = det * np.linalg.inv(matrix)
+    adjoint = np.round(adjoint).astype(int)
+    inverse = (adjoint * det_inv) % modulus
+    return inverse
+
+# Function to decrypt a ciphertext using the Hill cipher
+def hill_decrypt(ciphertext, key):
+    n = len(key)
+    # Convert ciphertext and key to matrices
+    ciphertext_matrix = text_to_matrix(ciphertext)
+    key_matrix = np.array(key)
+    # Reshape key matrix to an n x n matrix
+    key_matrix = key_matrix.reshape(n, n)
+    # Calculate the modular inverse of the key matrix
+    key_inverse = mod_inv(key_matrix, 26)
+    # Reshape the ciphertext matrix to an m x n matrix
+    ciphertext_matrix = ciphertext_matrix.reshape(-1, n)
+    # Perform the decryption
+    decrypted_matrix = np.dot(ciphertext_matrix, key_inverse) % 26
+    # Convert the decrypted matrix back to a string
+    decrypted_text = matrix_to_text(decrypted_matrix.flatten())
+    return decrypted_text
+
+# Example usage
+plaintext = "HEMANTHBABUA"
+key = [[3, 2], [5, 7]]  # Example key matrix
+
+# Encryption
+encrypted_text = hill_encrypt(plaintext, key)
+print("Encrypted:", encrypted_text)
+
+# Decryption
+decrypted_text = hill_decrypt(encrypted_text, key)
+print("Decrypted:", decrypted_text)
+
 ```
 
 OUTPUT :
 
-![image](https://github.com/hemanth2110/cryptography_19CS412_classical_techni/assets/121078629/922000f3-b29d-4d4d-8776-b1292fc26967)
+![Screenshot 2024-03-01 141040](https://github.com/hemanth2110/Cryptography---19CS412-classical-techqniques/assets/121078629/9c7ec565-649d-48dc-8c1c-85f41fe1a9ef)
 
 
 
