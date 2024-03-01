@@ -393,75 +393,56 @@ Repeat the above steps to generate the entire cipher text.
 PROGRAM :
 
 ```
-#include <stdio.h>
-#include<conio.h>
-#include <ctype.h>
-#include <string.h>
-void encipher();
-void decipher();
-int main()
-{
-int choice;
-while(1)
-{
-printf("\n1. Encrypt Text");
-printf("\n2. Decrypt Text");
-printf("\n3. Exit");
-printf("\n\nEnter Your Choice : ");
-scanf("%d",&choice);
-if(choice == 3)
-exit(0);
-else if(choice == 1)
-encipher();
-else if(choice == 2)
-decipher();
-else
-printf("Please Enter Valid Option.");
-}
-}
-void encipher()
-{
-unsigned int i,j;
-char input[50],key[10];
-printf("\n\nEnter Plain Text: ");
-scanf("%s",input);
-printf("\nEnter Key Value: ");
-scanf("%s",key);
-printf("\nResultant Cipher Text: ");
-for(i=0,j=0;i<strlen(input);i++,j++)
-{
-if(j>=strlen(key))
-{ j=0;
-}
-printf("%c",65+(((toupper(input[i])-65)+(toupper(key[j])-
-65))%26));
-}}
-void decipher()
-{
-unsigned int i,j;
-char input[50],key[10];
-int value;
-printf("\n\nEnter Cipher Text: ");
-scanf("%s",input);
-printf("\n\nEnter the key value: ");
-scanf("%s",key);
-for(i=0,j=0;i<strlen(input);i++,j++)
-{
-if(j>=strlen(key))
-{ j=0; }
-value = (toupper(input[i])-64)-(toupper(key[j])-64);
-if( value < 0)
-{ value = value * -1;
-}
-printf("%c",65 + (value % 26));
-}
-return 0;
-}
+def vigenere_encrypt(plaintext, key):
+    ciphertext = ''
+    key_index = 0
+    for char in plaintext:
+        if char.isalpha():
+            shift = ord(key[key_index % len(key)].upper()) - ord('A')
+            if char.isupper():
+                ciphertext += chr((ord(char) + shift - ord('A')) % 26 + ord('A'))
+            else:
+                ciphertext += chr((ord(char) + shift - ord('a')) % 26 + ord('a'))
+            key_index += 1
+        else:
+            ciphertext += char
+    return ciphertext
+
+def vigenere_decrypt(ciphertext, key):
+    plaintext = ''
+    key_index = 0
+    for char in ciphertext:
+        if char.isalpha():
+            shift = ord(key[key_index % len(key)].upper()) - ord('A')
+            if char.isupper():
+                plaintext += chr((ord(char) - shift - ord('A')) % 26 + ord('A'))
+            else:
+                plaintext += chr((ord(char) - shift - ord('a')) % 26 + ord('a'))
+            key_index += 1
+        else:
+            plaintext += char
+    return plaintext
+
+# Example usage
+plaintext = "hemanth babu"
+key = "KEY"
+
+# Encryption
+encrypted_text = vigenere_encrypt(plaintext, key)
+print("Encrypted:", encrypted_text)
+
+# Decryption
+decrypted_text = vigenere_decrypt(encrypted_text, key)
+print("Decrypted:", decrypted_text)
+
+
+
+
 ```
 
 OUTPUT :
 
-![image](https://github.com/hemanth2110/cryptography_19CS412_classical_techni/assets/121078629/f291ce2c-a05b-4c69-bd6f-1a9a9dd609eb)
+![Screenshot 2024-03-01 141532](https://github.com/hemanth2110/Cryptography---19CS412-classical-techqniques/assets/121078629/f16a4f5d-16dd-4008-a5e7-3f305623b0a7)
 
 
 RESULT :
